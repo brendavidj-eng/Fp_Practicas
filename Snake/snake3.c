@@ -70,7 +70,7 @@ void enableRawMode(){
     newt.c_lflag &= ~(ICANON | ECHO);
 
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    fcntl(STDIN_FILENO, F_GETFL, O_NONBLOCK);
+    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
 void disableRawMode(){
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
@@ -122,22 +122,16 @@ void setup(){
 }
 
 void draw(){
-    clearScreen();
-    //system("clear");
     for(int i=0; i< HEIGHT;i++){
         for(int j=0; j< WIDTH; j++){
-            if(j==0 || i ==0 || i==HEIGHT-1 || j == WIDTH-1){
-                 printf(YELLOW"#");
+            if(snakeX==j && snakeY==i){
+                 printf(GREEN"s");
                  continue;
             }
-            if(snakeX==j && snakeY==i){
-                printf(GREEN"s");
-                continue;
-            } 
             if(fruitX==j && fruitY==i){
                 printf(RED"o");
                 continue;
-            } 
+            }
             printf(RESET" ");
         }
         printf(RESET"\n");
@@ -150,7 +144,10 @@ void draw(){
 void logic(){
     // Función para que choque con las paredes
     if(snakeX<=0 || snakeX>=WIDTH || snakeY<=0 || snakeY>=HEIGHT){
-        printf(RED"Game Over \n" RESET);
+        printf(RED"Game Over \n");
+        #ifndef _WIN32
+        disableRawMode();
+        #endif
         exit(0);
     }
     // Función para que se coma las frutas
@@ -181,7 +178,7 @@ int main(){
         #ifdef _WIN32
         Sleep(150);
         #else
-        usleep(150000);
+        usleep(300000);
         #endif 
     }
     #ifndef _WIN32
