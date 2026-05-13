@@ -1,3 +1,7 @@
+//Clase 13-05-26
+
+//Código Space con ayuda de IA (Gemini)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -19,75 +23,78 @@
     #include <fcntl.h>
 #endif
 
-// Variables globales
-int naveX, naveY;
-char direction = ' ';
+int naveX, naveY; 
+int fruitX, fruitY;
+int score = 0;
 bool game_over = false;
 
-// --- FUNCIONES DE TERMINAL (SISTEMA) ---
+void clearScreen(){
 #ifdef _WIN32
-void clearScreen(){ system("cls"); }
-char readInput(){ if(_kbhit()) return _getch(); return 0; }
+    system("cls");
 #else
+    system("clear");
+#endif
+}
+
+#ifndef _WIN32
 struct termios oldt;
 void enableRawMode(){
     struct termios newt;
     tcgetattr(STDIN_FILENO, &oldt);
     newt = oldt;
-    newt.c_lflag &= ~(ICANON| ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);    
-    int flags = fcntl(STDIN_FILENO, F_GETFL, O_NONBLOCK); 
-    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK); 
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    int flags = fcntl(STDIN_FILENO, F_GETFL, O_NONBLOCK);
+    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 }
-void disableRawMode(){ tcsetattr(STDIN_FILENO, TCSANOW, &oldt); }
-void clearScreen(){ system("clear"); }
-char readInput(){ int ch = getchar(); if(ch!= EOF) return ch; return 0; }
+void disableRawMode(){
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+}
 #endif
 
-// --- MOVER JUGADOR (CON PUNTEROS) ---
-void movePlayer(int *x, int *y, char dir){
-    switch (dir){
-        case 'w': case 'W': (*y)--; break;
-        case 's': case 'S': (*y)++; break;
-        case 'a': case 'A': (*x)--; break;
-        case 'd': case 'D': (*x)++; break;
-    }
+// Función modificada: si no hay tecla, devuelve 0 (no se mueve sola)
+char readInput(){
+#ifdef _WIN32
+    if(_kbhit()) return _getch();
+#else
+    int ch = getchar();
+    if(ch != EOF) return ch;
+#endif
+    return 0;
 }
 
-// --- LÓGICA DE COLISIONES (GAME OVER) ---
-void logic(){
-    // Verifica si la punta o la base de la nave tocan los muros
-    if(naveX <= 0 || naveX >= WIDTH - 1 || naveY <= 0 || naveY >= HEIGHT - 2){
-        game_over = true;
-    }
-    // Verifica si las alas laterales chocan
-    if(naveX - 1 <= 0 || naveX + 1 >= WIDTH - 1){
-        game_over = true;
-    }
+void generateFruit(){
+    // Evitamos que la fruta salga en los bordes o donde la nave suele estar
+    fruitX = (rand() % (WIDTH - 4)) + 2;
+    fruitY = (rand() % (HEIGHT - 4)) + 1;
 }
 
 void setup(){
-    // Inicia en el centro inferior
+    // Posición inicial: centro horizontal, parte inferior (dejando espacio para las alas)
     naveX = WIDTH / 2;
     naveY = HEIGHT - 3; 
+    generateFruit();
 }
 
 void draw(){
     clearScreen();
     for(int i = 0; i < HEIGHT; i++){
         for(int j = 0; j < WIDTH; j++){
-            // Bordes amarillos
-            if(i == 0 || i == HEIGHT-1 || j == 0 || j == WIDTH-1){
-                printf(YELLOW"#");
-                continue;
+            // Bordes
+            if(j == 0 || i == 0 || i == HEIGHT - 1 || j == WIDTH - 1){
+                printf(YELLOW "#");
             }
-
-            // DIBUJAR LA NAVE (# arriba y # # abajo)
-            if(i == naveY && j == naveX){
-                printf(GREEN"#"); // Punta
+            // Nave (Punta)
+            else if(j == naveX && i == naveY){
+                printf(GREEN "#");
             }
-            else if(i == naveY + 1 && (j == naveX - 1 || j == naveX + 1)){
-                printf(GREEN"#"); // Alas
+            // Nave (Alas un renglón abajo)
+            else if((j == naveX - 1 || j == naveX + 1) && i == naveY + 1){
+                printf(GREEN "#");
+            }
+            // Fruta
+            else if(j == fruitX && i == fruitY){
+                printf(RED "Ѽ");
             }
             else {
                 printf(" ");
@@ -95,53 +102,63 @@ void draw(){
         }
         printf("\n");
     }
+    printf(RESET "Score: %d | Mueve la nave con WASD\n", score);
+}
 
-    if(game_over) {
-        printf(RED"  ¡¡¡ GAME OVER !!!\n"RESET);
-        printf(RED"  Chocaste contra el borde.\n"RESET);
-    } else {
-        printf(RESET"  WASD: Mover | Q: Salir\n");
+void logic(char move){
+    switch (move) {
+        case 'w': case 'W': naveY--; break;
+        case 's': case 'S': naveY++; break;
+        case 'a': case 'A': naveX--; break;
+        case 'd': case 'D': naveX++; break;
+    }
+
+    // Colisiones con bordes (ajustadas para el tamaño de la nave 3x2)
+    if(naveX <= 1 || naveX >= WIDTH - 2 || naveY < 1 || naveY >= HEIGHT - 2){
+        game_over = true;
+    }
+
+    // Colisión con fruta
+    if((naveX == fruitX && naveY == fruitY) || 
+       (naveX - 1 == fruitX && naveY + 1 == fruitY) || 
+       (naveX + 1 == fruitX && naveY + 1 == fruitY)){
+        score += 10;
+        generateFruit();
     }
 }
 
 int main(){
     setup();
-    #ifndef _WIN32
+#ifndef _WIN32
     enableRawMode();
-    #endif
+#endif
 
     while(!game_over){
         draw();
-        char nuevo = readInput();
-        if(nuevo == 'q' || nuevo == 'Q') break;
+        char input = readInput();
         
-        if(nuevo != 0) direction = nuevo;
+        // Solo ejecuta la lógica si el usuario presionó una tecla válida
+        if(input != 0) {
+            logic(input);
+        }
 
-        movePlayer(&naveX, &naveY, direction);
-        direction = 0; // Detenerse para que no sea como la víbora
-        
-        logic(); 
-
-        #ifdef _WIN32
-        Sleep(50);
-        #else
-        usleep(50000);
-        #endif
+        // Un pequeño delay para que no parpadee demasiado
+#ifdef _WIN32
+        Sleep(30);
+#else
+        usleep(30000);
+#endif
     }
 
-    // Dibujar el estado final del choque
+    // GAME OVER EN ROJO
+    clearScreen();
     draw();
+    printf(RED "\n###########################\n");
+    printf("#        GAME OVER        #\n");
+    printf("###########################\n" RESET);
 
-    #ifndef _WIN32
+#ifndef _WIN32
     disableRawMode();
-    #endif
-
-    // Pausa para que veas tu derrota
-    #ifdef _WIN32
-    Sleep(2000);
-    #else
-    sleep(2);
-    #endif
-
+#endif
     return 0;
 }

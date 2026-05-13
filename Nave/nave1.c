@@ -1,4 +1,4 @@
-// Clase 11-05-26
+// Clase 11-05-26   codigo nave 
 
 #include <stdio.h>
 #include <stdlib.h>
