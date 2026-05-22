@@ -1,8 +1,11 @@
-// Clase 20-05-26 --- Programa q abre una ventana hasat que x o cerrar
+// Clase 22-05-26
 
 #include <stdio.h>
-#include <SDL2/SDL.h>
 #include <stdbool.h>
+#include <SDL2/SDL.h>
+
+#define WIDTH 800
+#define HEIGHT 600
 
 int main (int argc, char **argv)
 {
@@ -33,22 +36,48 @@ int main (int argc, char **argv)
 
     //Comando para q aviente la ventana ahcia el frente
     SDL_RaiseWindow(window);
-    while (running)
+
+    SDL_Renderer *renderer = SDL_CreateRenderer(
+        window,
+        -1,
+        SDL_RENDERER_ACCELERATED
+    );
+
+    if(renderer == NULL)
+    {
+        printf("Error: %s\n", SDL_GetError());
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+
+    while(running)
     {
         while(SDL_PollEvent(&event))
         {
-            if(event.type == SDL_QUIT){ // cerrar ventana (X)
+            if(event.type == SDL_QUIT){
                 running = false;
-            } else if(event.type == SDL_KEYDOWN){
+            } else if (event.type == SDL_KEYDOWN){
                 if(event.key.keysym.sym == SDLK_x)
-                running = false;
+                    running = false;
             }
         }
+
+        SDL_SetRenderDrawColor(renderer,0,0,0,255);
+        SDL_RendererClear(renderer);
+
+        SDL_SetRenderDrawColor(renderer,255,255,255,255);
+
+        SDL_Rect square= {(WIDTH/2)-25, (HEIGHT/2)-25, 50, 50};
+
+        SDL_RenderFillRect(renderer, &square);
+
+        SDL_RenderPresent(renderer);
     }
 
-    //SDL_Delay(5000);
+    //SDL_Delay(3000);
 
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-
     SDL_Quit();
 }
