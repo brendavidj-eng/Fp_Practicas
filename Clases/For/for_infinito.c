@@ -1,3 +1,5 @@
+// Clase 5
+
 #include <stdio.h>
 
 //Programa que muestra un for infinito

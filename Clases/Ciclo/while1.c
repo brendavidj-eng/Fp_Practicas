@@ -1,8 +1,10 @@
+// Clase 4
+
 #include <stdio.h>
 #include <stdbool.h>
 
 int main () {
-    while(true){
+    while(1){
         printf("Dentro del ciclo\n");
     }
     return 0;

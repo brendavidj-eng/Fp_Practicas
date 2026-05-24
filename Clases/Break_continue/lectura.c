@@ -1,4 +1,4 @@
-// Este programa muestra como leer datos del teclado para llenar de informacion un arreglo
+// Clase 6 - Este programa muestra como leer datos del teclado para llenar de informacion un arreglo
 #include <stdio.h>
 
 int main (){

@@ -1,4 +1,4 @@
-/*Programa que muestra la serie de Ulam de un número entero*/
+/*Clase 4 - Programa que muestra la serie de Ulam de un número entero*/ 
 #include <stdio.h>
 
 void main () {
