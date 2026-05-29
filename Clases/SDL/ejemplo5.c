@@ -1,27 +1,29 @@
 /* Clase 25-05-26 ---- Diferentes Imagenes Para Posiciones
 
 #include <stdio.h>
-#include <stdbool.h>
 #include <SDL2/SDL.h>
+#include <stdbool.h>
 #include <SDL2/SDL_image.h>
 
 #define WIDTH 800
 #define HEIGHT 600
 
 int posX, posY;
-int speed = 10;
+int speed =10;
+int frameWidth =22;
+int frameHeight = 40;
 
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
-    if(SDL_Init(SDL_INIT_VIDEO) != 0)
+    if(SDL_Init(SDL_INIT_VIDEO)!=0)
     {
-        printf ("Error: %s\n", SDL_GetError());
+        printf("Error: %s\n", SDL_GetError());
         return 1;
     }
 
-    IF(!(IMG_Init(IMG_INIT_PNG)&IMG_INIT_PNG)){
-        printf ("Error: %s\n", IMG_GetError());
-        SDL_Quit();
+    if(!(IMG_Init(IMG_INIT_PNG)&IMG_INIT_PNG)){
+        printf("Error: %s\n", IMG_GetError());
+        SDL_Quit();        
         return 1;
     }
 
@@ -29,11 +31,11 @@ int main (int argc, char **argv)
     SDL_Event event;
 
     SDL_Window *window = SDL_CreateWindow(
-        "HOLA MUNDO", // titulo de la ventana
-        SDL_WINDOWPOS_CENTERED, // posicion de la ventana en X
-        SDL_WINDOWPOS_CENTERED, // posicion de la ventana en Y
-        800, // ancho de la ventana 
-        600, // alto de la ventana
+        "HOLA MUNDO", // TITULO DE LA VENTA
+        SDL_WINDOWPOS_CENTERED, // POSICIÓN DE LA VENTANA EN X
+        SDL_WINDOWPOS_CENTERED, // POSICIÓN DE LA VENTANA EN Y
+        WIDTH, // ANCHO DE LA VENTANA
+        HEIGHT, // ALTO DE LA VENTANA
         0
     );
 
@@ -44,7 +46,9 @@ int main (int argc, char **argv)
         return 1;
     }
 
-    SDL_RaiseWindow(window);
+    SDL_RaiseWindow(window); 
+
+    
 
     SDL_Renderer *renderer = SDL_CreateRenderer(
         window,
@@ -60,9 +64,9 @@ int main (int argc, char **argv)
         return 1;
     }
 
-    SDL_Texture *texture = IMG_LadTexture(renderer, "venus.png");
+    SDL_Texture *texture = IMG_LoadTexture(renderer, "moon.png");
 
-    if(texture == NULL){
+    if(texture==NULL){
         printf("Error: %s\n", IMG_GetError());
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
@@ -71,95 +75,105 @@ int main (int argc, char **argv)
         return 1;
     }
 
-    posX=(WIDTH/2)-25;
-    posY=(HEIGHT/2)-25;
-    int frame = 0, frameWidth = 22, frameHeight = 40;
-    int framePosX=0, framePosY=11; 
-    int direction = 0;
+    posX = (WIDTH/2)-25;
+    posY = (HEIGHT/2)-25;
+
+    int frame = 0;
+    int direction =0;
+    bool dirLeft = true;
 
     while(running)
     {
         while(SDL_PollEvent(&event))
         {
+            dirLeft = true;
             if(event.type == SDL_QUIT){
                 running = false;
-            } else if (event.type == SDL_KEYDOWN){
-
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 225);
-                SDL_Render
-                switch(event.key.keysym.sym)//switch(direction)
+            }else if(event.type == SDL_KEYDOWN){
+                switch (event.key.keysym.sym)
                 {
-                case SDLK_UP:
+                case SDLK_x:
+                    running = false;
                     break;
 
-                case 0:
-                    frameposX = frame * frameWidht;
-                    framePosY = frame * frame
+                case SDLK_UP:
+                    direction= 2;
+                    posY-= speed;
+                    frame = (frame+1) % 4;
+                    break;
 
                 case SDLK_DOWN:
-                    //direction = 0;
-                    //frame = (frame+1)%3;
+                    direction= 0;
                     posY += speed;
+                    frame = (frame+1) % 3;
                     break;
 
                 case SDLK_LEFT:
-                    //direction = 1;
-                    //frame = (frame+1)%5;
-                    posX -= speed;
+                    direction= 1;
+                    posX-= speed;
+                    frame = (frame+1) % 4;
                     break;
 
                 case SDLK_RIGHT:
-                    //direction = 2;
-                    //frame = (frame+1)%5;
+                    dirLeft = false;
+                    direction = 1;
                     posX += speed;
+                    frame = (frame+1) % 4;
                     break;
-
+                
                 default:
                     break;
+                }     
                     
-                }
+                
             }
         }
 
         SDL_SetRenderDrawColor(renderer,0,0,0,255);
-        SDL_RendererClear(renderer);
+        SDL_RenderClear(renderer);
 
-        SDL_SetRenderDrawColor(renderer,255,255,255,255);
+        SDL_SetRenderDrawColor(renderer, 255,255,255, 255);
 
-        SDL_Rect src = {frame*frameWidth, direccion*framePosY+11, frameWidth, frameHeight};
+        int framePosX = frame*frameWidth;
+        int framePosY = (direction!=2)?direction*frameHeight+10:direction*frameHeight+15;
 
-    if(direction==100)
+        SDL_Rect src = { framePosX, framePosY, frameWidth, frameHeight};
+
+        SDL_Rect dest = {posX, posY, 32, 48};
+
+        if(!dirLeft){
             SDL_RenderCopyEx(
-                render,
+                renderer,
                 texture,
                 &src,
                 &dest,
                 0,
                 NULL,
                 SDL_FLIP_HORIZONTAL
-                );
+            );
+        }else{
+            SDL_RenderCopy(
+                renderer,
+                texture,
+                &src,
+                &dest
+            );
+        }
 
-    else
-        SDL_RenderCopy(
-            rederer,
-            texture,
-            &src,
-            &dest
-        );
+        
 
         //SDL_RenderFillRect(renderer, &square);
 
         SDL_RenderPresent(renderer);
 
         SDL_Delay(16);
+
     }
 
-    //SDL_DestroyTexture(texture);
-    //SDL_DestroyRenderer(renderer);
-
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-
-    //IMG_Quit();
+    IMG_Quit();
     SDL_Quit();
 }
 */
